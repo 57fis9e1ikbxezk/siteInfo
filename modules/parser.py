@@ -103,20 +103,39 @@ def _guess_type(path: Path):
     mt, _ = mimetypes.guess_type(str(path))
     return mt or "application/octet-stream"
 
-def _download(s: requests.Session, u: str, out: Path, non_media_list: list):
+def _download(s: requests.Session, u: str, out: Path, non_media_list: list, tg_token: str, tg_chat: int):
     r = s.get(u, timeout=SESSION_TIMEOUT)
     r.raise_for_status()
     p = _unique_path(_local_path(out, u))
     _save(r, p)
     ctype = r.headers.get("Content-Type", _guess_type(p)).lower()
+    
+    content_text = r.text if "text/html" in ctype or ".html" in u else ""
+    
+    contains_html_tag = ("<html>" in content_text.lower()) and ("</html>" in content_text.lower())
+    filename = u.rstrip("/").split("/")[-1]
+    if filename in COMMON_FILES and (len(r.content) > 0) and (not contains_html_tag):
+        print(f"СОХРАНЕН РЕАЛЬНЫЙ ФАЙЛ {p}")
+        if tg_token and tg_chat:
+            try:
+                resp = requests.post(
+                    f"https://api.telegram.org/bot{tg_token}/sendMessage",
+                    data={"chat_id": tg_chat, "text": f"СОХРАНЕН РЕАЛЬНЫЙ ФАЙЛ {p}"}
+                )
+                if not resp.ok:
+                    print(f"Telegram API error: {resp.status_code}, {resp.text}")
+            except Exception as e:
+                print(f"Ошибка при отправки сообщения в телеграмм: {e}")
+
     if not any(x in ctype for x in ("text/html", "text/css", "image", "video", "audio", "font", "application/javascript")):
         non_media_list.append(str(p.relative_to(out)))
-    size = len(r.content)
+    
     if not any(p.suffix.lower().endswith(x) for x in [".html", ".htm", ".css", ".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg", ".mp4", ".mp3", ".wav", ".ogg", ".webm"]):
         with (out / "non_media_files.txt").open("a", encoding="utf-8") as f:
             f.write(str(p) + "\n")
+    
+    return len(r.content), ctype, content_text
 
-    return size, ctype, r.text if "text/html" in ctype or ".html" in u else ""
 
 def _crawl(s: requests.Session, start: str, out: Path, domain: str, non_media_list: list):
     q: queue.Queue[str] = queue.Queue()
@@ -142,16 +161,16 @@ def _crawl(s: requests.Session, start: str, out: Path, domain: str, non_media_li
         except Exception:
             continue
 
-def _try_common(s: requests.Session, base: str, out: Path, non_media_list: list):
+def _try_common(s: requests.Session, base: str, out: Path, non_media_list: list, tg_token: str, tg_chat: int):
     root = base if base.endswith("/") else base + "/"
     for f in COMMON_FILES:
         u = urljoin(root, f)
         try:
-            _download(s, u, out, non_media_list)
+            _download(s, u, out, non_media_list, tg_token, tg_chat)
         except Exception:
             pass
 
-def run(domain: str):
+def run(domain: str, tg_token: str, tg_chat: int):
     if not domain.startswith(("http://", "https://")):
         domain = "https://" + domain
     parsed = urlparse(domain)
@@ -167,7 +186,7 @@ def run(domain: str):
                 s.proxies = cfg
                 s.headers["User-Agent"] = _ua()
                 s.get(domain, timeout=SESSION_TIMEOUT).raise_for_status()
-                _try_common(s, domain, out_dir, non_media)
+                _try_common(s, domain, out_dir, non_media, tg_token, tg_chat)
                 _crawl(s, domain, out_dir, base_domain, non_media)
                 break
         except Exception:

@@ -89,9 +89,18 @@ def _collect_js(url: str, s: requests.Session) -> tuple[str, dict]:
     print(f"🗂️  Собрано {len(code)} JS и CSS фрагментов")
     return "\n".join(code), r.headers
 
+def send_telegram_message(token: str, chat_id: int, text: str):
+    max_len = 1024
+    chunks = [text[i:i+max_len] for i in range(0, len(text), max_len)]
+    for chunk in chunks:
+        resp = requests.post(
+            f"https://api.telegram.org/bot{token}/sendMessage",
+            data={"chat_id": chat_id, "text": chunk}
+        )
+        if not resp.ok:
+            print(f"Telegram API error: {resp.status_code}, {resp.text}")
 
-
-def run(domain: str) -> None:
+def run(domain: str, tg_token: str, tg_chat: int) -> None:
     if not domain.startswith(("http://", "https://")):
         domain = "https://" + domain
 
@@ -127,17 +136,25 @@ def run(domain: str) -> None:
                 continue
 
             found = False
+            reses = []
             for detector in _DETECTORS:
                 try:
                     res = detector(js, headers)
                     if res:
                         print(f"🎯  Детектор {detector.__module__} нашёл: {res}")
+                        reses += res
                         found = True
                 except Exception as e:
                     print(f"⚠️  Детектор {detector.__module__} упал: {e}")
 
             if found:
                 print("🏁  Готово, останавливаю цикл")
+                if tg_token and tg_chat:
+                    try:
+                        print(f"📡 Отправляю в Telegram чат {tg_chat}")
+                        send_telegram_message(tg_token, tg_chat, f"Найдены фреймворки для сайта: {domain}\n" + "\n".join(map(str, reses)))
+                    except Exception as e:
+                        print(f"Ошибка при отправки сообщения в телеграмм: {e}")
                 return
 
     print("😔  Все прокси нерабочие или детекторы ничего не нашли")
