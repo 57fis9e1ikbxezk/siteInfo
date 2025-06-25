@@ -2,7 +2,7 @@ import os
 import pkgutil
 import importlib
 import requests
-import modules
+from modules import telegram
 from pathlib import Path
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin
@@ -127,7 +127,7 @@ def run(domain: str, tg_token: str, tg_chat: int) -> None:
                 if tg_token and tg_chat:
                     try:
                         print(f"📡 Отправляю в Telegram чат {tg_chat}")
-                        modules.telegram.send_message(tg_token, tg_chat, f"Найдены ruby фреймы для сайта: {domain}\n" + "".join(map(str, reses)))
+                        telegram.send_message(tg_token, tg_chat, f"Найдены ruby фреймы для сайта: {domain}\n" + "".join(map(str, reses)))
                     except Exception as e:
                         print(f"Ошибка при отправки сообщения в телеграмм: {e}")
                 return

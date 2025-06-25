@@ -3,7 +3,7 @@ import requests, math
 import fake_useragent
 import importlib
 import pkgutil
-import modules
+from modules import telegram
 from urllib.parse import urlparse
 from pathlib import Path
 
@@ -111,7 +111,7 @@ def run(domain: str, tg_token: str, tg_chat: int) -> None:
                                     msg += "⚠️ Уязвимость: неизвестно\n"
                             if "details" in result:
                                 msg += f"ℹ️ Подробности: {result['details']}\n"
-                        modules.telegram.send_message(tg_token, tg_chat, msg)
+                        telegram.send_message(tg_token, tg_chat, msg)
                     except Exception as e:
                         print(f"Ошибка при отправке сообщения в Telegram: {e}")
                 return
