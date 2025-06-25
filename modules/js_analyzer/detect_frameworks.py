@@ -1,5 +1,5 @@
 import re
-from .base import detect_pattern
+from modules.base import detect_pattern
 
 # Это универсальный модуль. Его расширение - нужно. Отправляйте в исешках коды если хотите больше возможностей софта и не делать ничего сами
 
@@ -26,10 +26,7 @@ FRAMEWORKS = {
     "Angular": ["platformBrowser", "NgModule", "angularfire2"],
     "React": ["React.createElement", "ReactDOM", "react-dom"],
     "Vue": ["new Vue", "Vue.component", "vue.runtime"],
-    "Svelte": ["$$render", "$$result"],
-    "Ember": ["Ember.Application", "ember.js"],
     "Backbone": ["Backbone.View", "Backbone.Model"],
-    "Alpine.js": ["Alpine.start", "x-data"],
     "Next.js": ["__NEXT_DATA__"],
     "Nuxt.js": ["window.__NUXT__"]
 }

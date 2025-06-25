@@ -3,6 +3,7 @@ import requests, math
 import fake_useragent
 import importlib
 import pkgutil
+import modules
 from urllib.parse import urlparse
 from pathlib import Path
 
@@ -55,17 +56,6 @@ def _detect(domain: str, session: requests.Session) -> dict:
         return results
     print("❌ CMS не определена.")
     return {"cms": "Unknown"}
-
-def send_telegram_message(token: str, chat_id: int, text: str):
-    max_len = 1024
-    chunks = [text[i:i+max_len] for i in range(0, len(text), max_len)]
-    for chunk in chunks:
-        resp = requests.post(
-            f"https://api.telegram.org/bot{token}/sendMessage",
-            data={"chat_id": chat_id, "text": chunk}
-        )
-        if not resp.ok:
-            print(f"Telegram API error: {resp.status_code}, {resp.text}")
 
 def run(domain: str, tg_token: str, tg_chat: int) -> None:
     if not domain.startswith(("http://", "https://")):
@@ -121,7 +111,7 @@ def run(domain: str, tg_token: str, tg_chat: int) -> None:
                                     msg += "⚠️ Уязвимость: неизвестно\n"
                             if "details" in result:
                                 msg += f"ℹ️ Подробности: {result['details']}\n"
-                        send_telegram_message(tg_token, tg_chat, msg)
+                        modules.telegram.send_message(tg_token, tg_chat, msg)
                     except Exception as e:
                         print(f"Ошибка при отправке сообщения в Telegram: {e}")
                 return

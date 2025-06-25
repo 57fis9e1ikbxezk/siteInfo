@@ -1,5 +1,5 @@
 import re
-from .base import detect_pattern
+from modules.base import detect_pattern
 
 KNOWN_VULNERABLE_VERSIONS = [
     "2.0.0",  # исторически уязвимая

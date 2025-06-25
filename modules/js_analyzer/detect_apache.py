@@ -1,4 +1,4 @@
-from .base import detect_pattern
+from modules.base import detect_pattern
 
 def detect_apache_license(js_code: str) -> bool:
     patterns = ['Apache License', 'SPDX-License-Identifier: Apache-2.0']

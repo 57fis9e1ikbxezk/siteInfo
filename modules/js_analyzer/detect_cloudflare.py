@@ -1,5 +1,5 @@
 import re
-from .base import detect_pattern
+from modules.base import detect_pattern
 
 _CLOUDFLARE_MARKERS = [
     "cdn-cgi", "cf-ray", "cf-cache-status", "__cfduid",

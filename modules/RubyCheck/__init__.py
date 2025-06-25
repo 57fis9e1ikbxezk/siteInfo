@@ -53,7 +53,7 @@ def add_detectors():
         except Exception as e:
             print(f"❌  Ошибка при импорте '{full_name}': {e}")
 
-def _collect_js(url: str, s: requests.Session) -> tuple[str, dict]:
+def _collect_ruby(url: str, s: requests.Session) -> tuple[str, dict]:
     print(f"🌐  GET {url}")
     r = s.get(url, timeout=10)
     r.raise_for_status()
@@ -61,28 +61,18 @@ def _collect_js(url: str, s: requests.Session) -> tuple[str, dict]:
     
     code = []
     
-    for tag in soup.find_all("script"):
-        if tag.get("src"):
-            src = urljoin(url, tag["src"])
-            try:
-                print(f"📥  Скачиваю скрипт {src}")
-                code.append(s.get(src, timeout=7).text)
-            except Exception as e:
-                print(f"⚠️  Не удалось скачать {src}: {e}")
-        elif tag.string:
-            code.append(tag.string)
-
-    for tag in soup.find_all("link", rel="stylesheet"):
+    for tag in soup.find_all("a"):
         href = tag.get("href")
-        if href:
-            css_url = urljoin(url, href)
+        if href and href.endswith(".rb"): 
+            ruby_url = urljoin(url, href)
             try:
-                print(f"📥  Скачиваю CSS {css_url}")
-                code.append(s.get(css_url, timeout=7).text)
+                print(f"📥  Скачиваю Ruby {ruby_url}")
+                ruby_code = s.get(ruby_url, timeout=7).text
+                code.append(ruby_code)
             except Exception as e:
-                print(f"⚠️  Не удалось скачать {css_url}: {e}")
+                print(f"⚠️  Не удалось скачать {ruby_url}: {e}")
 
-    print(f"🗂️  Собрано {len(code)} JS и CSS фрагментов")
+    print(f"🗂️  Собрано {len(code)} Ruby фрагментов")
     return "\n".join(code), r.headers
 
 def run(domain: str, tg_token: str, tg_chat: int) -> None:
@@ -115,7 +105,7 @@ def run(domain: str, tg_token: str, tg_chat: int) -> None:
             if ua:
                 s.headers.update({"User-Agent": ua})
             try:
-                js, headers = _collect_js(domain, s)
+                ruby, headers = _collect_ruby(domain, s)
             except Exception as e:
                 print(f"⚠️  Ошибка при скачивании сайта через прокси {proxies}: {e}")
                 continue
@@ -124,7 +114,7 @@ def run(domain: str, tg_token: str, tg_chat: int) -> None:
             reses = []
             for detector in _DETECTORS:
                 try:
-                    res = detector(js, headers)
+                    res = detector(ruby, headers)
                     if res:
                         print(f"🎯  Детектор {detector.__module__} нашёл: {res}")
                         reses += res + " "
@@ -137,7 +127,7 @@ def run(domain: str, tg_token: str, tg_chat: int) -> None:
                 if tg_token and tg_chat:
                     try:
                         print(f"📡 Отправляю в Telegram чат {tg_chat}")
-                        modules.telegram.send_message(tg_token, tg_chat, f"Найдены фреймворки для сайта: {domain}\n" + "".join(map(str, reses)))
+                        modules.telegram.send_message(tg_token, tg_chat, f"Найдены ruby фреймы для сайта: {domain}\n" + "".join(map(str, reses)))
                     except Exception as e:
                         print(f"Ошибка при отправки сообщения в телеграмм: {e}")
                 return

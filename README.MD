@@ -19,7 +19,7 @@
 
 Убедитесь, что установлен Python 3.7+
 
-\`\`\`bash
+\`\`\`
 pip install -r requirements.txt
 \`\`\`
 

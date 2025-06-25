@@ -1,4 +1,5 @@
 import re
+from modules.base import detect_pattern
 
 KNOWN_VULNERABLE_VERSIONS = [
     "4.5.0",  

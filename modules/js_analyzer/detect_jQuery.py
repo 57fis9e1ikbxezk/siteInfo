@@ -1,5 +1,5 @@
 import re
-from .base import detect_pattern
+from modules.base import detect_pattern
 
 def detect_jquery(js_code: str) -> bool:
     patterns = ["jQuery", "$(", "jQuery.fn"]
@@ -42,6 +42,6 @@ def detect(js_code: str, headers: dict) -> str | None:
                 "известно о публичных уязвимостях (например CVE-2019-11358, CVE-2020-11022/23). "
             )
         else:
-            return f"✅ Найдена jQuery версии {ver} — известных критичных уязвимостей нет."
+            return f"✅ Найдена jQuery версии {ver}"
     else:
         return "ℹ️ Найдено упоминание jQuery, но версию определить не удалось."

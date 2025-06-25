@@ -2,7 +2,7 @@ import re
 import os
 import json
 from pathlib import Path
-from .base import detect_pattern
+from modules.base import detect_pattern
 
 MAX_VERSION = 6
 

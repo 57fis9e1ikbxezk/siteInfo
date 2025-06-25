@@ -1,4 +1,4 @@
-from .base import detect_pattern
+from modules.base import detect_pattern
 
 def detect_zonejs(js_code: str) -> bool:
     patterns = ['Zone', 'ZoneAwarePromise', 'zoneDelegate']
